@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -11,6 +12,7 @@ import (
 var logsFile *os.File
 var catalog string
 
+// эта функция выполняется многократно, изменяя название файла логов в зависимости от текущей даты
 func checkLogs() {
 	currentDir, err := os.Getwd()
 
@@ -67,12 +69,22 @@ func checkLogs() {
 	os.Stdout = logsFile
 }
 
-func InitFileLogs(logsCatalog string, days int) {
+// точка входа для приложений. укажите здесь название каталога, где будут складываться логи, количество дней логирования, рорт файл-сервера, на котором можно смотреть эти логи
+// если поднимать файл-сервер не надо, укажите пустую строку
+func InitFileLogs(logsCatalog string, days int, fileServerPort string) {
 
 	catalog = logsCatalog
+
+	//создаем или прицепляемся к нужному файлу вывода
 	checkLogs()
 
+	//запускам файл-сервер с логами
+	if !(fileServerPort == "") {
+		go runFileServerLogs(fileServerPort)
+	}
+
 	scheduleDailyLogRotation(days)
+
 }
 
 // ежедневно выполняемые действия по обслуживанию приложения
@@ -148,5 +160,18 @@ func deleteOldLogs(days int) {
 				log.Printf("Удалён старый лог: %s\n", file.Name())
 			}
 		}
+	}
+}
+
+func runFileServerLogs(port string) {
+
+	fileServer := http.FileServer(http.Dir("./logs"))
+	http.Handle("/logs/", http.StripPrefix("/logs/", fileServer))
+
+	fmt.Println("Сервер логирования запущен на http://localhost:8080/logs/")
+	err := http.ListenAndServe(":"+port, nil)
+
+	if err != nil {
+		fmt.Println(err)
 	}
 }
