@@ -84,7 +84,6 @@ func InitFileLogs(logsCatalog string, days int, fileServerPort string) {
 	}
 
 	scheduleDailyLogRotation(days)
-
 }
 
 // ежедневно выполняемые действия по обслуживанию приложения
