@@ -167,10 +167,15 @@ func runFileServerLogs(port string) {
 	fileServer := http.FileServer(http.Dir("./logs"))
 	http.Handle("/logs/", http.StripPrefix("/logs/", fileServer))
 
-	fmt.Println("Сервер логирования запущен на http://localhost:" + port + "/logs/")
+	logMessage("Сервер логирования запущен на http://localhost:" + port + "/logs/")
 	err := http.ListenAndServe(":"+port, nil)
 
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func logMessage(msg string) {
+	t := time.Now().Format("2006-01-02 15:04:05") + ". "
+	fmt.Printf("%s: %s\n", t, msg)
 }
