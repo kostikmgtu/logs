@@ -16,7 +16,7 @@ var catalog string
 func checkLogs() {
 	currentDir, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка при получении текущего каталога: %v\n", err)
+		logMessage("Ошибка при получении текущего каталога: " + err.Error())
 		return
 	}
 
@@ -27,17 +27,17 @@ func checkLogs() {
 	if _, err := os.Stat(logsDir); os.IsNotExist(err) {
 		err = os.MkdirAll(logsDir, 0755)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка при создании каталога %s: %v\n", catalog, err)
+			logMessage("Ошибка при создании каталога " + catalog + ": " + err.Error())
 			return
 		}
-		fmt.Printf("Каталог успешно создан по пути: %s\n", logsDir)
+		logMessage("Каталог успешно создан по пути: " + logsDir)
 	} else if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка при проверке каталога %s: %v\n", catalog, err)
+		logMessage("Ошибка при проверке каталога " + catalog + ": " + err.Error())
 		return
 	}
 
-	currentTimeFormat := time.Now().Format("20060102")
-	currFileName := filepath.Join(logsDir, currentTimeFormat)
+	currentTimeFormat := time.Now().Format("2006-01-02")
+	currFileName := filepath.Join(logsDir, "/logs-"+currentTimeFormat)
 
 	// проверяем, не идет ли уже логирование в этот же файл
 	if logsFile != nil {
@@ -51,7 +51,7 @@ func checkLogs() {
 	// Открываем или создаем новый файл
 	newFile, err := os.OpenFile(currFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка открытия файла логов '%s': %v\n", currFileName, err)
+		logMessage("Ошибка открытия файла логов '" + currFileName + "': " + err.Error())
 		return
 	}
 
@@ -103,7 +103,7 @@ func scheduleDailyLogRotation(days int) {
 func deleteOldLogs(days int) {
 	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Printf("Ошибка получения текущего каталога: %v\n", err)
+		logMessage("Ошибка получения текущего каталога: " + err.Error())
 		return
 	}
 
@@ -111,7 +111,7 @@ func deleteOldLogs(days int) {
 
 	files, err := os.ReadDir(logsDir)
 	if err != nil {
-		log.Printf("Ошибка чтения каталога %s: %v\n", catalog, err)
+		logMessage("Ошибка чтения каталога " + catalog + ": " + err.Error())
 		return
 	}
 
@@ -127,16 +127,16 @@ func deleteOldLogs(days int) {
 
 		info, err := file.Info()
 		if err != nil {
-			log.Printf("Ошибка получения информации о файле %s: %v\n", file.Name(), err)
+			logMessage("Ошибка получения информации о файле " + file.Name() + ": " + err.Error())
 			continue
 		}
 
 		if now.Sub(info.ModTime()) > expireDuration {
 			err := os.Remove(filePath)
 			if err != nil {
-				log.Printf("Ошибка удаления файла %s: %v\n", file.Name(), err)
+				logMessage("Ошибка удаления файла " + file.Name() + ": " + err.Error())
 			} else {
-				log.Printf("Удалён старый лог: %s\n", file.Name())
+				logMessage("Удалён старый лог: " + file.Name())
 			}
 		}
 	}
@@ -150,7 +150,8 @@ func runFileServerLogs(port string) {
 	logMessage("Сервер логирования запущен на http://localhost:" + port + "/logs/")
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка запуска HTTP сервера логов: %v\n", err)
+		//fmt.Fprintf(os.Stderr, "Ошибка запуска HTTP сервера логов: %v\n", err)
+		logMessage("Ошибка запуска HTTP сервера логов: " + err.Error())
 	}
 }
 
